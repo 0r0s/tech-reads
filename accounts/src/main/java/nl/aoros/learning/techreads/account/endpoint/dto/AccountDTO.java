@@ -1,20 +1,16 @@
-package nl.aoros.learning.techreads.account.model;
+package nl.aoros.learning.techreads.account.endpoint.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
 /**
  * @author adrian oros
  */
-@Document
 @Data
 @NoArgsConstructor
-public class Account {
-    @Id
+public class AccountDTO {
     private String id;
     private String name;
     private boolean enabled;
