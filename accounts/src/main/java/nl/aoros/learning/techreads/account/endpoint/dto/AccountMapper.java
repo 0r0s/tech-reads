@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper
 public interface AccountMapper {
     AccountDTO toDto(Account source);
-    Account fromDto(AccountDTO destination);
+    Account fromDto(AccountDTO source);
     List<AccountDTO> toDtos(List<Account> accounts);
     List<Account> fromDtos(List<AccountDTO> accounts);
 }

@@ -2,7 +2,6 @@ package nl.aoros.learning.techreads.account.service;
 
 import nl.aoros.learning.techreads.account.model.Account;
 import nl.aoros.learning.techreads.account.repository.AccountRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,7 +16,6 @@ public class AccountService {
 
     private AccountRepository accountRepository;
 
-    @Autowired
     public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }

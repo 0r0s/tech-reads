@@ -1,4 +1,4 @@
-package nl.aoros.learning.techreads.book.model;
+package nl.aoros.learning.techreads.book.endpoint.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +10,9 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
-public class Chapter {
+public class ChapterDTO {
     private int number;
     private String name;
-    private List<Note> notes;
+    private List<NoteDTO> notes;
     private List<String> paretoList;
 }

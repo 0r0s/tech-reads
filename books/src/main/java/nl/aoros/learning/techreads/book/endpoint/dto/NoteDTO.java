@@ -1,4 +1,4 @@
-package nl.aoros.learning.techreads.book.model;
+package nl.aoros.learning.techreads.book.endpoint.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +11,8 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
-public class Note {
+public class NoteDTO {
     private String content;
+    private LocalDateTime createDate;
     private List<String> tags;
 }

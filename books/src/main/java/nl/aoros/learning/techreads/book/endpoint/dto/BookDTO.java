@@ -1,8 +1,7 @@
-package nl.aoros.learning.techreads.book.model;
+package nl.aoros.learning.techreads.book.endpoint.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,19 +9,14 @@ import java.util.List;
 /**
  * @author adrian oros
  */
-@Document
 @Data
 @NoArgsConstructor
-public class Book {
+public class BookDTO {
     private String id;
     private String title;
     private String author;
     private List<String> categories;
     private List<String> tags;
-    private String review;
-    private List<Note> notes;
-    private List<String> paretoList;
-    private List<Chapter> chapters;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
 }

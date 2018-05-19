@@ -11,5 +11,4 @@ import reactor.core.publisher.Mono;
 public interface AccountRepository extends ReactiveCrudRepository<Account, String> {
     Mono<Account> findByName(String name);
     Flux<Account> findAllByOrderByCreateDateAsc();
-    Flux<Account> findAllByOrderByCreateDateDesc();
 }

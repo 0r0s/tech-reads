@@ -59,7 +59,7 @@ public class AccountsEndpointSpringBootTest {
         account.setCreateDate(LocalDateTime.now());
         account.setEmail("test@test.com");
 
-        WebTestClient.ResponseSpec exchange = this.client.post()
+        this.client.post()
                 .uri("/api")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(account))
@@ -107,7 +107,7 @@ public class AccountsEndpointSpringBootTest {
         account.setId(id);
 
 
-        WebTestClient.ResponseSpec exchange = this.client.put()
+        this.client.put()
                 .uri("/api")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(account))
