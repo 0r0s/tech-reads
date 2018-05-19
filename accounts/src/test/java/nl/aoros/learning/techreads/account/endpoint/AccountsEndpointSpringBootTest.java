@@ -159,7 +159,6 @@ public class AccountsEndpointSpringBootTest {
         secondAccount.setCreateDate(LocalDateTime.now());
         secondAccount.setEmail("test2@test.com");
 
-        Thread.sleep(100l);
         String secondId = accountRepository.save(secondAccount).block().getId();
 
         this.client.get()

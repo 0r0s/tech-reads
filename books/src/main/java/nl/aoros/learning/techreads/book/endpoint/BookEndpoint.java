@@ -41,7 +41,9 @@ public class BookEndpoint {
 
     @PutMapping
     public Mono<Void> update(@RequestBody BookDTO bookDTO) {
-        return Mono.just(bookDTO).map(mapper::fromDto).flatMap(bookService::updateBook);
+        return Mono.just(bookDTO)
+                .map(mapper::fromDto)
+                .flatMap(bookService::updateBook);
     }
 
     @GetMapping("/{id}")
