@@ -6,9 +6,9 @@ import nl.aoros.learning.techreads.account.service.exception.NotFoundException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.support.WebExchangeBindException;
 
 /**
  * @author adrian oros
@@ -21,7 +21,7 @@ public class RestExceptionHandler {
     private static final String ACCOUNT_ALREADY_EXISTS_ERROR_KEY = "account.alreadyexists";
     private static final String VALIDATION_ERROR_KEY = "validation.error";
 
-    @ExceptionHandler
+    @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.error(message, e);
@@ -30,7 +30,7 @@ public class RestExceptionHandler {
                 .body(new ErrorResponse(ACCOUNT_NOT_FOUND_ERROR_KEY, e.getMessage()));
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.error(message, e);
@@ -39,8 +39,8 @@ public class RestExceptionHandler {
                 .body(new ErrorResponse(ACCOUNT_ALREADY_EXISTS_ERROR_KEY, e.getMessage()));
     }
 
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+    @ExceptionHandler(WebExchangeBindException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(WebExchangeBindException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.info(message, e);
 

@@ -1,13 +1,10 @@
 package nl.aoros.learning.techreads.account.endpoint;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.aoros.learning.techreads.account.AccountsApplication;
 import nl.aoros.learning.techreads.account.endpoint.dto.AccountDTO;
 import nl.aoros.learning.techreads.account.model.Account;
 import nl.aoros.learning.techreads.account.repository.AccountRepository;
 import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,41 +34,60 @@ public class AccountsEndpointSpringBootTest {
     @Autowired
     private AccountRepository accountRepository;
 
-    private static ObjectMapper mapper;
-
-    @BeforeClass
-    public static void setupTest() {
-        mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    }
-
     @After
     public void cleanup() {
         accountRepository.deleteAll().block();
     }
 
     @Test
-    public void shouldCreateAccount() throws  Exception {
-        AccountDTO account = new AccountDTO();
-        account.setName("jim");
-        account.setLocation("Amsterdam");
-        account.setEnabled(true);
-        account.setCreateDate(LocalDateTime.now());
-        account.setEmail("test@test.com");
+    public void shouldCreateAccount() throws Exception {
+        accountRepository.deleteAll().block();
+        AccountDTO account = validAccountDto();
 
         this.client.post()
                 .uri("/api")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(account))
                 .accept(MediaType.APPLICATION_JSON_UTF8)
-                .exchange().expectStatus().isOk();
+                .exchange().expectStatus().isCreated();
 
         Account accountByName = accountRepository.findByName("jim").block();
         assertThat(accountByName).isNotNull();
     }
 
     @Test
-    public void shouldGetAccount() throws  Exception {
+    public void shouldGetValidationErrorWhenFieldsNotSetOnCreate() {
+        Object[][] userInvalidData = createUserInvalidData();
+        for (Object[] data : userInvalidData) {
+            this.client.post()
+                    .uri("/api")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .body(BodyInserters.fromObject(data[0]))
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .exchange().expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.errorCode").isEqualTo("validation.error")
+                    .jsonPath("$.message").isEqualTo(data[1]);
+        }
+    }
+
+    @Test
+    public void shouldGetAlreadyExistsErrorWhenCreatingUserWithExistingEmail() {
+        Account account = validAccount();
+        accountRepository.save(account).block();
+
+        this.client.post()
+                .uri("/api")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(BodyInserters.fromObject(account))
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange().expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errorCode").isEqualTo("account.alreadyexists");
+    }
+
+    @Test
+    public void shouldGetAccount() throws Exception {
         Account account = new Account();
         account.setName("test");
         account.setLocation("Amsterdam");
@@ -91,7 +107,17 @@ public class AccountsEndpointSpringBootTest {
     }
 
     @Test
-    public void shouldUpdateAccount() throws  Exception {
+    public void shouldGetNotFoundErrorWhenRetrievingInvalidUser() {
+        this.client.get()
+                .uri("/api/{id}", "12345")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("account.notfound");
+    }
+
+    @Test
+    public void shouldUpdateAccount() throws Exception {
         Account account = new Account();
         account.setName("jim");
         account.setLocation("Amsterdam");
@@ -123,6 +149,42 @@ public class AccountsEndpointSpringBootTest {
     }
 
     @Test
+    public void shouldGetNotFoundErrorWhenUpdatingInvalidUser() {
+        Account account = new Account();
+        account.setId("id23456");
+        account.setName("jim");
+        account.setLocation("Amsterdam");
+        account.setEnabled(true);
+        account.setCreateDate(LocalDateTime.now());
+        account.setEmail("test@test.com");
+
+        this.client.put()
+                .uri("/api")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(BodyInserters.fromObject(account))
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("account.notfound");
+    }
+
+    @Test
+    public void shouldGetValidationErrorWhenFieldsNotSetOnUpdate() {
+        Object[][] objects = updateUserInvalidData();
+        for (Object[] data : objects) {
+            this.client.put()
+                    .uri("/api")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .body(BodyInserters.fromObject(data[0]))
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .exchange().expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.errorCode").isEqualTo("validation.error")
+                    .jsonPath("$.message").isEqualTo(data[1]);
+        }
+    }
+
+    @Test
     public void shouldDeleteAccount() throws Exception {
         Account account = new Account();
         account.setName("jim");
@@ -139,6 +201,16 @@ public class AccountsEndpointSpringBootTest {
                 .exchange().expectStatus().isOk();
 
         assertThat(accountRepository.findById(id).block()).isNull();
+    }
+
+    @Test
+    public void shouldGetNotFoundErrorWhenDeletingInvalidUser() {
+        this.client.delete()
+                .uri("/api/{id}", "12345")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("account.notfound");
     }
 
     @Test
@@ -179,5 +251,78 @@ public class AccountsEndpointSpringBootTest {
                 .jsonPath("[1].enabled").isEqualTo("true")
                 .jsonPath("[1].email").isEqualTo("test2@test.com")
                 .jsonPath("[1].createDate").isNotEmpty();
+    }
+
+    public static Object[][] createUserInvalidData() {
+        AccountDTO first = validAccountDto();
+        first.setEmail(null);
+
+        AccountDTO second = validAccountDto();
+        second.setEnabled(null);
+
+        AccountDTO third = validAccountDto();
+        third.setLocation(null);
+
+        AccountDTO fourth = validAccountDto();
+        fourth.setName(null);
+
+        return new Object[][]{
+                {first,     "The email is required"},
+                {second,    "The enabled flag is required"},
+                {third,     "The location is required"},
+                {fourth,    "The name is required"},
+        };
+    }
+
+    public static Object[][] updateUserInvalidData() {
+        AccountDTO first = validAccountDto();
+        first.setId("id");
+        first.setEmail(null);
+
+        AccountDTO second = validAccountDto();
+        second.setId("id2");
+        second.setEnabled(null);
+
+        AccountDTO third = validAccountDto();
+        third.setId("3");
+        third.setLocation(null);
+
+        AccountDTO fourth = validAccountDto();
+        fourth.setId("4");
+        fourth.setName(null);
+
+        AccountDTO fifth = validAccountDto();
+        fifth.setId("5");
+        fifth.setId(null);
+
+        return new Object[][]{
+                {first,     "The email is required"},
+                {second,    "The enabled flag is required"},
+                {third,     "The location is required"},
+                {fourth,    "The name is required"},
+                {fifth,    "The id is required"},
+        };
+    }
+
+    private static AccountDTO validAccountDto() {
+        AccountDTO account = new AccountDTO();
+        account.setName("jim");
+        account.setLocation("Amsterdam");
+        account.setEnabled(true);
+        account.setCreateDate(LocalDateTime.now());
+        account.setEmail("test@test.com");
+        return account;
+    }
+
+    private static Account validAccount() {
+        Account account = new Account();
+        account.setName("jim");
+        account.setLocation("Amsterdam");
+        account.setEnabled(true);
+        LocalDateTime now = LocalDateTime.now();
+        account.setCreateDate(now);
+        account.setEmail("test@test.com");
+        account.setLastPasswordChange(now);
+        return account;
     }
 }

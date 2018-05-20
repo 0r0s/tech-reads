@@ -25,13 +25,12 @@ public class AccountService {
     public Mono<String> addAccount(Account account) {
         return validateAccountFields(account)
                 .flatMap(acc -> {
-                    accountRepository.findByName(account.getName())
+                    accountRepository.findByEmail(account.getEmail())
                             .blockOptional()
-                            .orElseThrow(() -> {
-                                String message = String.format("Account with name %s already exists", account.getName());
-                                return new AlreadyExistsException(message);
+                            .ifPresent((existing) -> {
+                                String message = String.format("Account with email %s already exists", account.getEmail());
+                                throw new AlreadyExistsException(message);
                             });
-
                     acc.setCreateDate(LocalDateTime.now());
                     acc.setEnabled(true);
                     return accountRepository.save(acc);
@@ -42,13 +41,15 @@ public class AccountService {
         return validateAccountFields(account)
                 .flatMap(acc -> accountRepository.findById(account.getId()))
                 .flatMap(existingAccount -> {
-                    if (existingAccount == null) {
-                        throw new NotFoundException("Could not find account with id: " + account.getId());
-                    }
                     existingAccount.setEnabled(account.isEnabled());
                     existingAccount.setLocation(account.getLocation());
                     existingAccount.setName(account.getName());
                     return accountRepository.save(existingAccount);
+                }).hasElement().map(exists -> {
+                    if (!exists) {
+                        throw new NotFoundException("Could not find account with id: " + account.getId());
+                    }
+                    return true;
                 }).then();
     }
 
@@ -57,11 +58,22 @@ public class AccountService {
     }
 
     public Mono<Account> getAccount(String id) {
-        return accountRepository.findById(id);
+        return accountRepository.findById(id)
+                .doOnSuccess(acc -> {
+                    if (acc == null) {
+                        throw new NotFoundException("Could not find account with id: " + id);
+                    }
+                });
     }
 
     public Mono<Void> deleteAccount(String id) {
-        return accountRepository.deleteById(id);
+        return accountRepository.findById(id)
+                .doOnSuccess(acc -> {
+                    if (acc == null) {
+                        throw new NotFoundException("Could not find account with id: " + id);
+                    }
+                })
+                .then(accountRepository.deleteById(id));
     }
 
     private Mono<Account> validateAccountFields(Account account) {

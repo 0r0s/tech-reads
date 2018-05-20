@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -22,7 +23,7 @@ public class AccountDTO {
     private String name;
 
     @ApiModelProperty(value = "Whether the account is enabled or not")
-    @NotBlank(message = "The enabled flag is required", groups = {Update.class, Create.class})
+    @NotNull(message = "The enabled flag is required", groups = {Update.class, Create.class})
     private Boolean enabled;
 
     @ApiModelProperty(value = "The account email address")
