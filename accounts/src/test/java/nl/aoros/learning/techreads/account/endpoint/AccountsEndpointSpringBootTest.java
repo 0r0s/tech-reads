@@ -103,7 +103,7 @@ public class AccountsEndpointSpringBootTest {
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody().jsonPath("$.name").isEqualTo("test");
+                .expectBody().jsonPath("$.body.name").isEqualTo("test");
     }
 
     @Test
@@ -239,18 +239,18 @@ public class AccountsEndpointSpringBootTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("[0].id").isEqualTo(firstId)
-                .jsonPath("[0].name").isEqualTo("jim")
-                .jsonPath("[0].location").isEqualTo("Amsterdam")
-                .jsonPath("[0].enabled").isEqualTo("true")
-                .jsonPath("[0].email").isEqualTo("test@test.com")
-                .jsonPath("[0].createDate").isNotEmpty()
-                .jsonPath("[1].id").isEqualTo(secondId)
-                .jsonPath("[1].name").isEqualTo("jim2")
-                .jsonPath("[1].location").isEqualTo("Cluj")
-                .jsonPath("[1].enabled").isEqualTo("true")
-                .jsonPath("[1].email").isEqualTo("test2@test.com")
-                .jsonPath("[1].createDate").isNotEmpty();
+                .jsonPath("$.body[0].id").isEqualTo(firstId)
+                .jsonPath("$.body[0].name").isEqualTo("jim")
+                .jsonPath("$.body[0].location").isEqualTo("Amsterdam")
+                .jsonPath("$.body[0].enabled").isEqualTo("true")
+                .jsonPath("$.body[0].email").isEqualTo("test@test.com")
+                .jsonPath("$.body[0].createDate").isNotEmpty()
+                .jsonPath("$.body[1].id").isEqualTo(secondId)
+                .jsonPath("$.body[1].name").isEqualTo("jim2")
+                .jsonPath("$.body[1].location").isEqualTo("Cluj")
+                .jsonPath("$.body[1].enabled").isEqualTo("true")
+                .jsonPath("$.body[1].email").isEqualTo("test2@test.com")
+                .jsonPath("$.body[1].createDate").isNotEmpty();
     }
 
     public static Object[][] createUserInvalidData() {

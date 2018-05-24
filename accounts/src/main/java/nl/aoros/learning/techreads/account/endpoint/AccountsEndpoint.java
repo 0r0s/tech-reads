@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * @author adrian oros
  */
@@ -29,8 +32,10 @@ public class AccountsEndpoint {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<String> createAccount(@RequestBody @Validated(AccountDTO.Create.class) AccountDTO account) {
-        return Mono.just(account).map(mapper::fromDto).flatMap(accountService::addAccount);
+    public Mono<RestApiResponse<String>> createAccount(@RequestBody @Validated(AccountDTO.Create.class) AccountDTO account) {
+        return Mono.just(account).map(mapper::fromDto)
+                .flatMap(accountService::addAccount)
+                .map(RestApiResponse::ok);
     }
 
     @DeleteMapping("/{id}")
@@ -47,13 +52,16 @@ public class AccountsEndpoint {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<AccountDTO> getAccount(@PathVariable String id) {
-        return accountService.getAccount(id).map(mapper::toDto);
+    public Mono<RestApiResponse<AccountDTO>> getAccount(@PathVariable String id) {
+        return accountService.getAccount(id).map(mapper::toDto).map(RestApiResponse::ok);
     }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
-    public Flux<AccountDTO> getAccounts() {
-        return accountService.findAllAccounts().map(mapper::toDto);
+    public Mono<RestApiResponse<List<AccountDTO>>> getAccounts() {
+        return accountService.findAllAccounts()
+                .map(mapper::toDto)
+                .collect(Collectors.toList())
+                .map(RestApiResponse::ok);
     }
 }

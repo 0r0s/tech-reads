@@ -22,25 +22,25 @@ public class RestExceptionHandler {
     private static final String VALIDATION_ERROR_KEY = "validation.error";
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e) {
+    public ResponseEntity<RestApiResponse> handleNotFound(NotFoundException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.error(message, e);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse(ACCOUNT_NOT_FOUND_ERROR_KEY, e.getMessage()));
+                .body(RestApiResponse.error(ACCOUNT_NOT_FOUND_ERROR_KEY, e.getMessage()));
     }
 
     @ExceptionHandler(AlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleAlreadyExists(AlreadyExistsException e) {
+    public ResponseEntity<RestApiResponse> handleAlreadyExists(AlreadyExistsException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.error(message, e);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ACCOUNT_ALREADY_EXISTS_ERROR_KEY, e.getMessage()));
+                .body(RestApiResponse.error(ACCOUNT_ALREADY_EXISTS_ERROR_KEY, e.getMessage()));
     }
 
     @ExceptionHandler(WebExchangeBindException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(WebExchangeBindException e) {
+    public ResponseEntity<RestApiResponse> handleValidationException(WebExchangeBindException e) {
         String message = String.format(MESSAGE, e.getClass().getName());
         log.info(message, e);
 
@@ -51,6 +51,6 @@ public class RestExceptionHandler {
                 .orElse(e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(VALIDATION_ERROR_KEY, fieldErrorMessage));
+                .body(RestApiResponse.error(VALIDATION_ERROR_KEY, fieldErrorMessage));
     }
 }
