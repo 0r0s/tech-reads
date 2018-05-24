@@ -1,11 +1,13 @@
 package nl.aoros.learning.techreads.book.endpoint;
 
 import nl.aoros.learning.techreads.book.endpoint.dto.AccountBookDetailsDTO;
+import nl.aoros.learning.techreads.book.endpoint.dto.AccountBookDetailsDTO.BookDetailsCrud;
 import nl.aoros.learning.techreads.book.endpoint.dto.BookDTO;
 import nl.aoros.learning.techreads.book.endpoint.dto.mapper.AccountBookDetailsMapper;
 import nl.aoros.learning.techreads.book.endpoint.dto.mapper.BookMapper;
 import nl.aoros.learning.techreads.book.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,7 +32,7 @@ public class BookEndpoint {
     }
 
     @PostMapping
-    public Mono<String> create(@RequestBody BookDTO book) {
+    public Mono<String> create(@RequestBody @Validated(BookDTO.Create.class) BookDTO book) {
         return Mono.just(book).map(mapper::fromDto).flatMap(bookService::addBook);
     }
 
@@ -40,7 +42,7 @@ public class BookEndpoint {
     }
 
     @PutMapping
-    public Mono<Void> update(@RequestBody BookDTO bookDTO) {
+    public Mono<Void> update(@RequestBody @Validated(BookDTO.Update.class) BookDTO bookDTO) {
         return Mono.just(bookDTO)
                 .map(mapper::fromDto)
                 .flatMap(bookService::updateBook);
@@ -57,7 +59,7 @@ public class BookEndpoint {
     }
 
     @PutMapping("/details")
-    public Mono<String> addBookDetails(@RequestBody AccountBookDetailsDTO accountBookDetailsDTO) {
+    public Mono<String> addBookDetails(@RequestBody @Validated({BookDetailsCrud.class}) AccountBookDetailsDTO accountBookDetailsDTO) {
         return Mono.just(accountBookDetailsDTO)
                 .map(detailsMapper::fromDto)
                 .flatMap(details -> bookService.addBookDetails(details));

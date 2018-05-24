@@ -50,7 +50,6 @@ public class BookService {
         return validateBook(book)
                 .flatMap(validatedBook -> bookRepository.findById(validatedBook.getId()))
                 .flatMap(existingBook -> {
-
                     existingBook.setAuthor(book.getAuthor());
                     existingBook.setTitle(book.getTitle());
                     existingBook.setCategories(book.getCategories());

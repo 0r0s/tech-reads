@@ -238,6 +238,116 @@ public class BookEndpointSpringBootTest {
                 .jsonPath("[1].updateDate").isNotEmpty();
     }
 
+    @Test
+    public void shouldGetValidationErrorWhenFieldsNotSetOnUpdateBook() {
+        Object[][] objects = updateBookInvalidData();
+        for (Object[] data : objects) {
+            this.client.put()
+                    .uri("/api")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .body(BodyInserters.fromObject(data[0]))
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .exchange().expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.errorCode").isEqualTo("validation.error")
+                    .jsonPath("$.message").isEqualTo(data[1]);
+        }
+    }
+
+    @Test
+    public void shouldGetValidationErrorWhenFieldsNotSetOnCreateBook() {
+        Object[][] objects = createBookInvalidData();
+        for (Object[] data : objects) {
+            this.client.post()
+                    .uri("/api")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .body(BodyInserters.fromObject(data[0]))
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .exchange().expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.errorCode").isEqualTo("validation.error")
+                    .jsonPath("$.message").isEqualTo(data[1]);
+        }
+    }
+
+    @Test
+    public void shouldGetValidationErrorWhenFieldsNotSetOnCreateBookDetails() {
+        Object[][] objects = createBookDetailsInvalidData();
+        for (Object[] data : objects) {
+            this.client.put()
+                    .uri("/api/details")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .body(BodyInserters.fromObject(data[0]))
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .exchange().expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.errorCode").isEqualTo("validation.error")
+                    .jsonPath("$.message").isEqualTo(data[1]);
+        }
+    }
+
+    private Object[][] updateBookInvalidData() {
+        BookDTO firstBook = newBookDtoInstance("title", 1);
+        firstBook.setId(null);
+
+        BookDTO secondBook = newBookDtoInstance("title", 1);
+        secondBook.setId("1");
+        secondBook.setTitle(null);
+
+        BookDTO thirdBook = newBookDtoInstance("title", 1);
+        thirdBook.setId("1");
+        thirdBook.setAuthor(null);
+
+        return new Object[][]{
+                {firstBook,  "The id is required"},
+                {secondBook, "The title is required"},
+                {thirdBook,  "The author is required"},
+        };
+    }
+
+    private Object[][] createBookInvalidData() {
+        BookDTO firstBook = newBookDtoInstance("title", 1);
+        firstBook.setTitle(null);
+
+        BookDTO secondBook = newBookDtoInstance("title", 1);
+        secondBook.setAuthor(null);
+
+        return new Object[][]{
+                {firstBook, "The title is required"},
+                {secondBook, "The author is required"}
+        };
+    }
+
+    private Object[][] createBookDetailsInvalidData() {
+        AccountBookDetails firstBookDetails = accountBookDetails("title", 1);
+        firstBookDetails.getBook().setId("1");
+        firstBookDetails.setAccountId(null);
+
+        AccountBookDetails secondBookDetails = accountBookDetails("title", 1);
+        secondBookDetails.getBook().setId("1");
+        secondBookDetails.setBook(null);
+
+        AccountBookDetails thirdBookDetails = accountBookDetails("title", 1);
+        thirdBookDetails.getBook().setId("1");
+        thirdBookDetails.getBook().setTitle(null);
+
+        AccountBookDetails fourthBookDetails = accountBookDetails("title", 1);
+        fourthBookDetails.getBook().setId("1");
+        fourthBookDetails.getBook().setAuthor(null);
+
+        AccountBookDetails fifthBookDetails = accountBookDetails("title", 1);
+        fifthBookDetails.getBook().setId("1");
+        fifthBookDetails.getBook().setId(null);
+
+        return new Object[][] {
+                {firstBookDetails, "The account id is required"},
+                {secondBookDetails, "The book is required"},
+                {thirdBookDetails, "The book title is required"},
+                {fourthBookDetails, "The book author is required"},
+                {fifthBookDetails, "The book id is required"}
+        };
+    }
+
     private void checkRelevantDetailsAttributes(AccountBookDetailsDTO expectedDetails, AccountBookDetails actualDetails) {
         assertThat(actualDetails).isNotNull();
         assertThat(actualDetails.getId()).isNotNull();
@@ -261,7 +371,9 @@ public class BookEndpointSpringBootTest {
     private AccountBookDetailsDTO accountBookDetailsDTO(String title, int differentiator) {
         AccountBookDetailsDTO accountBookDetails = new AccountBookDetailsDTO();
         accountBookDetails.setAccountId("accId" + differentiator);
-        accountBookDetails.setBook(newBookDtoInstance(title, differentiator));
+        BookDTO book = newBookDtoInstance(title, differentiator);
+        book.setId("1");
+        accountBookDetails.setBook(book);
         ChapterDTO chapter = new ChapterDTO();
         chapter.setName("Chapter 1" + differentiator);
         chapter.setNumber(1 + differentiator);
