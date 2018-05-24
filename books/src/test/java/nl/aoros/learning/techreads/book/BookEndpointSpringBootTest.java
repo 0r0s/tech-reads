@@ -70,6 +70,21 @@ public class BookEndpointSpringBootTest {
     }
 
     @Test
+    public void shouldGetAlreadyExistsErrorWhenBookWithSameTitleExists() {
+        String title = "Microservices for Java Developers";
+        Book book = newBookInstance(title, 1);
+        bookRepository.save(book).block();
+
+        this.client.post()
+                .uri("/api")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(BodyInserters.fromObject(newBookDtoInstance(title, 1)))
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange().expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("book.alreadyexists");
+    }
+
+    @Test
     public void shouldDeleteBook() {
         Book savedBook = bookRepository.save(newBookInstance("title", 1)).block();
 
@@ -79,6 +94,15 @@ public class BookEndpointSpringBootTest {
                 .exchange().expectStatus().isOk();
 
         assertThat(bookRepository.findById(savedBook.getId()).block()).isNull();
+    }
+
+    @Test
+    public void shouldGetNotFoundErrorWhenDeletingNotExistingBook() {
+        this.client.delete()
+                .uri("/api/{id}", "lala")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange().expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("book.notfound");
     }
 
     @Test
@@ -110,6 +134,19 @@ public class BookEndpointSpringBootTest {
     }
 
     @Test
+    public void shouldGetNotFoundErrorWhenBookToUpdateDoesNotExist() {
+        Book book = newBookInstance("test", 1);
+        book.setId("id");
+        this.client.put()
+                .uri("/api")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .body(BodyInserters.fromObject(book))
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange().expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("book.notfound");
+    }
+
+    @Test
     public void shouldFetchBook() {
         Book savedBook = bookRepository.save(newBookInstance("Portocala", 1)).block();
 
@@ -125,6 +162,15 @@ public class BookEndpointSpringBootTest {
                 .jsonPath("$.categories[0]").isEqualTo(savedBook.getCategories().get(0))
                 .jsonPath("$.tags[0]").isEqualTo(savedBook.getTags().get(0))
                 .jsonPath("$.createDate").isNotEmpty();
+    }
+
+    @Test
+    public void shouldGetNotFoundErrorWhenFetchingNotExistingBook() {
+        this.client.get()
+                .uri("/api/{id}", "lolo")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange().expectStatus().isNotFound()
+                .expectBody().jsonPath("$.errorCode").isEqualTo("book.notfound");
     }
 
     @Test

@@ -4,6 +4,8 @@ import nl.aoros.learning.techreads.book.model.AccountBookDetails;
 import nl.aoros.learning.techreads.book.model.Book;
 import nl.aoros.learning.techreads.book.repository.AccountBookDetailsRepository;
 import nl.aoros.learning.techreads.book.repository.BookRepository;
+import nl.aoros.learning.techreads.book.service.exception.AlreadyExistsException;
+import nl.aoros.learning.techreads.book.service.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -31,6 +33,11 @@ public class BookService {
     public Mono<String> addBook(Book book) {
         return validateBook(book)
                 .flatMap(validatedBook -> {
+                    bookRepository.findByTitle(book.getTitle())
+                            .blockOptional()
+                            .ifPresent(existing -> {
+                                throw new AlreadyExistsException(String.format("Account with email %s already exists", existing.getTitle()));
+                            });
                     LocalDateTime now = LocalDateTime.now();
                     validatedBook.setCreateDate(now);
                     validatedBook.setUpdateDate(now);
@@ -43,25 +50,35 @@ public class BookService {
         return validateBook(book)
                 .flatMap(validatedBook -> bookRepository.findById(validatedBook.getId()))
                 .flatMap(existingBook -> {
-                    if (existingBook == null) {
-                        throw new RuntimeException("Could not find book with id: " + book.getId());
-                    }
+
                     existingBook.setAuthor(book.getAuthor());
                     existingBook.setTitle(book.getTitle());
                     existingBook.setCategories(book.getCategories());
                     existingBook.setTags(book.getTags());
                     existingBook.setUpdateDate(LocalDateTime.now());
                     return bookRepository.save(existingBook);
-                })
-                .then();
+                }).hasElement().map(exists -> {
+                    if (!exists) {
+                        throw new NotFoundException("Could not find book with id: " + book.getId());
+                    }
+                    return true;
+                }).then();
     }
 
     public Mono<Void> deleteBook(String id) {
-        return bookRepository.deleteById(id);
+        return bookRepository.findById(id).doOnSuccess(book -> {
+            if (book == null) {
+                throw new NotFoundException("Could not find book with id: " + id);
+            }
+        }).then(bookRepository.deleteById(id));
     }
 
     public Mono<Book> getBook(String id) {
-        return bookRepository.findById(id);
+        return bookRepository.findById(id).doOnSuccess(book -> {
+            if (book == null) {
+                throw new NotFoundException("Could not find book with id: " + id);
+            }
+        });
     }
 
     public Mono<AccountBookDetails> getAccountBookDetails(String id) {
