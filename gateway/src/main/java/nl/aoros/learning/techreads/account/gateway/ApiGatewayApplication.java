@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class ApiGatewayApplication {
-    @Value("${accounts.uri}")
-    private String accountsUrl;
-    @Value("${books.uri}")
-    private String bookUrl;
+    @Value("${accounts.api.url}")
+    private String accountsApiUrl;
+    @Value("${books.api.url}")
+    private String booksApiUrl;
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -21,13 +21,13 @@ public class ApiGatewayApplication {
                         .filters(f ->
                                 f.addRequestHeader("X-Account-Id", "id")
                                         .rewritePath("/accounts/(?<apiPath>.*)", "/$\\{apiPath}"))
-                        .uri(accountsUrl)
+                        .uri(accountsApiUrl)
                 )
                 .route("books", r -> r.path("/books/**")
                         .filters(f ->
                                 f.addRequestHeader("X-Account-Id", "id")
                                         .rewritePath("/books/(?<apiPath>.*)", "/$\\{apiPath}")
-                        ).uri(bookUrl)
+                        ).uri(booksApiUrl)
                 )
                 .build();
     }
